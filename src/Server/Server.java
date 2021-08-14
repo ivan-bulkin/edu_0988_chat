@@ -43,37 +43,36 @@ public class Server {
                                         break;//выходим из бесконечного цикла только, если имя Полтзователя задано, т.е. оно не null
                                 }
                                 currentUser.setUserName(userName);
-                                System.out.println(currentUser.getUserName() + " теперь в чате.");//Выводим сообщение об имени пользователя, который вошёл в чат в консоль чата
-                                for (User user : users) {
-                                    if (users.indexOf(currentUser) == users.indexOf(user)) {//Не отправляем сообщение самому пользователю, который вошёл в чат. Но отправляем ему сообщение Вы вошли в чат
-                                        DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
-                                        out.writeUTF("Вы вошли в чат.");
-                                        continue;
-                                    }
-                                    DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
-                                    out.writeUTF(currentUser.getUserName() + " теперь в чате.");
-                                }
+                                System.out.println(currentUser.getUserName() + " теперь в чате.");//Выводим сообщение об имени пользователя, который вошёл в чат в консоль сервера(логирование действий на Сервере)
+                                broadcastMessage(currentUser.getUserName() + " теперь в чате.");//Отправка сообщения всем доступным Клиентам
+                                out.writeUTF("Вы вошли в чат.");
                                 while (true) {
                                     String request = in.readUTF();//читаем сообщения от Клиента
-                                    System.out.println(currentUser.getUserName() + ": " + request);//Логирование действий пользователя на Сервере
-                                    for (User user : users) {
-                                        if (users.indexOf(currentUser) == users.indexOf(user))
-                                            continue;//Не отправляем сообщение самому пользователю, который отправил это сообщение
-                                        DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
-                                        out.writeUTF(currentUser.getUserName() + ": " + request);
+                                    if (!request.startsWith("/")) {//Если сообщение не начинается на /, то отправляем сообщение всем
+                                        broadcastMessage(currentUser.getUserName() + ": " + request);//Отправка сообщения всем доступным Клиентам
+                                        System.out.println(currentUser.getUserName() + ": " + request);//Логирование действий пользователя на Сервере
+                                        continue;
                                     }
                                 }
                             } catch (IOException e) {
                                 users.remove(currentUser);//удаляем Клиента из коллекции Пользователей
-                                System.out.println(currentUser.getUserName() + " теперь НЕ в чате.");//Выводим сообщение об имени пользователя, который вышел из чата в консоль чата
-                                for (User user : users) {
-                                    try {
-                                        DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
-                                        out.writeUTF(currentUser.getUserName() + " теперь НЕ в чате.");
-                                    } catch (IOException ex) {
-                                        ex.printStackTrace();
-                                    }
+                                System.out.println(currentUser.getUserName() + " теперь НЕ в чате.");//Выводим сообщение об имени пользователя, который вышел из чата в консоль сервера(логирование действий на Сервере)
+                                try {
+                                    broadcastMessage(currentUser.getUserName() + " теперь НЕ в чате.");//Отправка сообщения всем доступным Клиентам
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
                                 }
+                            }
+                        }
+
+                        private void broadcastMessage(String request) throws IOException {
+                            for (User user : users) {
+                                //выяснилась особенность, что пользователь подключился к серверу, но ещё не ввёл имени. Но ему при этом тоже будут приходить сообщения.
+                                //добавил проверку user.getUserName() == null и теперь пользователю, который не ввёл ещё имени ничего приходить не будет
+                                if (users.indexOf(currentUser) == users.indexOf(user) || user.getUserName() == null)
+                                    continue;//Не отправляем сообщение самому пользователю, который отправил это сообщение
+                                DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
+                                out.writeUTF(request);
                             }
                         }
                     }

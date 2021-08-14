@@ -35,7 +35,6 @@ public class Client {
             });
             thread.start();
             while (true) {
-//                System.out.print("Введите Ваше сообщение: ");
                 String consoleText = scanner.nextLine();//Ждём сообщение от пользователя
                 out.writeUTF(consoleText);//Отправялем сообщение на сервер
             }
