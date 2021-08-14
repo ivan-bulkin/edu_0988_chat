@@ -30,7 +30,13 @@ public class Server {
                                 out.writeUTF("Введите Ваше имя: ");
                                 String userName = in.readUTF();//Ожидаем имя от Клиента
                                 currentUser.setUserName(userName);
+                                System.out.println(currentUser.getUserName() + " теперь в чате.");//Выводим сообщение об имени пользователя, который вошёл в чат в консоль чата
                                 for (User user : users) {
+                                    if (users.indexOf(currentUser) == users.indexOf(user)) {//Не отправляем сообщение самому пользователю, который вошёл в чат. Но отправляем ему сообщение Вы вошли в чат
+                                        DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
+                                        out.writeUTF("Вы вошли в чат.");
+                                        continue;
+                                    }
                                     DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
                                     out.writeUTF(currentUser.getUserName() + " теперь в чате.");
                                 }
@@ -38,13 +44,15 @@ public class Server {
                                     String request = in.readUTF();//читаем сообщения от Клиента
                                     System.out.println(currentUser.getUserName() + ": " + request);//Логирование действий пользователя на Сервере
                                     for (User user : users) {
-                                        if (users.indexOf(currentUser) == users.indexOf(user)) continue;
+                                        if (users.indexOf(currentUser) == users.indexOf(user))
+                                            continue;//Не отправляем сообщение самому пользователю, который отправил это сообщение
                                         DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
                                         out.writeUTF(currentUser.getUserName() + ": " + request);
                                     }
                                 }
                             } catch (IOException e) {
                                 users.remove(currentUser);//удаляем Клиента из коллекции Пользователей
+                                System.out.println(currentUser.getUserName() + " теперь НЕ в чате.");//Выводим сообщение об имени пользователя, который вышел из чата в консоль чата
                                 for (User user : users) {
                                     try {
                                         DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
