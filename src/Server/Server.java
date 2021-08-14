@@ -105,7 +105,7 @@ public class Server {
                                 if (user.getUserName().equals(userName)) {
                                     DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
                                     out.writeUTF(request);
-                                    return;//прерываем и выходим из метода цикл, т.к. нет смысла идти далее, т.к. нужный пользователь найден и сообщение ему отправлено
+                                    return;//прерываем цикл и выходим из метода, т.к. нет смысла идти далее, т.к. нужный пользователь найден и сообщение ему отправлено
                                 }
                             }
                             //попадаем сюда, если перебрали всех пользователей и нужный пользователь не найден

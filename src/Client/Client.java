@@ -9,7 +9,7 @@ import java.util.Scanner;
 public class Client {
     public static void main(String[] args) {
         try {
-            Socket socket = new Socket("localhost", 8188);//193.168.46.140
+            Socket socket = new Socket("193.168.46.140", 8188);//localhost
             System.out.println("Вы успешно подключёны");
             DataInputStream in = new DataInputStream(socket.getInputStream());//это поток ввода
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());//это поток вывода
