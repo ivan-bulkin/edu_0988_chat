@@ -53,6 +53,21 @@ public class Server {
                                         System.out.println(currentUser.getUserName() + ": " + request);//Логирование действий пользователя на Сервере
                                         continue;
                                     }
+                                    //<command> <message> - сообщения с системными командами начинаются на /
+                                    // /w ivan отправляет сообщение только пользователю ivan
+                                    String[] tokens = request.split(" ");//разделяем сообщение по пробелу
+                                    if (tokens[0].equals("/w") && tokens.length > 2) {//если ввели только /w пробел, но далее ничего не ввели отправлем сообщение пользователю об ошибке. Чтобы не было ошибки пользователю надо ввести как минимум /w ivan сообщение
+                                        request = "";
+                                        for (int i = 2; i < tokens.length; i++) {//собираем сообщение назад. Т.е. вырезаем из сообщения /w ivan
+                                            request += tokens[i] + " ";
+                                        }
+                                        System.out.println(currentUser.getUserName() + " только для " + tokens[1] + ": " + request);//Логирование действий пользователя на Сервере
+                                        sendMessageToClient(request, tokens[1]);
+                                        continue;
+                                    } else {//если ввели впереди сообщения слеш /, но далее не ввели w, от отправляем пользователю сообщение об ошибке
+                                        out.writeUTF("Не хватает параметров, необходимо отправить команду следующего вида: /w <имя пользователя> <сообщение для пользователя>");
+                                        continue;
+                                    }
                                 }
                             } catch (IOException e) {
                                 users.remove(currentUser);//удаляем Клиента из коллекции Пользователей
@@ -65,6 +80,8 @@ public class Server {
                             }
                         }
 
+                        //Метод broadcastMessage - отправляет сообщение всем пользователям, кроме того, который это сообщение отправил.
+                        //String request - сам текст сообщения
                         private void broadcastMessage(String request) throws IOException {
                             for (User user : users) {
                                 //выяснилась особенность, что пользователь подключился к серверу, но ещё не ввёл имени. Но ему при этом тоже будут приходить сообщения.
@@ -74,6 +91,25 @@ public class Server {
                                 DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
                                 out.writeUTF(request);
                             }
+                        }
+
+                        //Метод sendMessageToClient - отправляет сообщение только конкретному пользователя
+                        //String request - сам текст сообщения
+                        //userName - имя пользователя, которому отправляем сообщение
+                        //Пользователь может отправить сообщение самому себе
+                        private void sendMessageToClient(String request, String userName) throws IOException {
+                            for (User user : users) {
+                                //выяснилась особенность, что пользователь подключился к серверу, но ещё не ввёл имени. Но ему при этом тоже будут приходить сообщения.
+                                //добавил проверку user.getUserName() == null и теперь пользователю, который не ввёл ещё имени ничего приходить не будет
+                                if (user.getUserName() == null) continue;
+                                if (user.getUserName().equals(userName)) {
+                                    DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream());
+                                    out.writeUTF(request);
+                                    return;//прерываем и выходим из метода цикл, т.к. нет смысла идти далее, т.к. нужный пользователь найден и сообщение ему отправлено
+                                }
+                            }
+                            //попадаем сюда, если перебрали всех пользователей и нужный пользователь не найден
+                            out.writeUTF("Пользователь " + userName + " не найден, сообщение не отправлено.");
                         }
                     }
                     );
